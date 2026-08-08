@@ -37,6 +37,16 @@ def get_db_connection():
         conn.commit()
 
     # Main Inventory with exactly 5 columns: item_name, total_stock, defective_stock, unit_price, min_stock_alert
+    # Check existing columns in main_inventory if table exists
+    cursor.execute("PRAGMA table_info(main_inventory)")
+    columns = cursor.fetchall()
+    
+    # If table has wrong number of columns, drop and recreate it cleanly to avoid mismatch
+    if columns and len(columns) != 5:
+        cursor.execute("DROP TABLE main_inventory")
+        conn.commit()
+
+    # Main Inventory with exactly 5 columns: item_name, total_stock, defective_stock, unit_price, min_stock_alert
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS main_inventory (
             item_name TEXT PRIMARY KEY,
