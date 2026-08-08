@@ -1,3 +1,8 @@
+import streamlit as st
+
+st.markdown("""
+    <link rel="manifest" href="manifest.json">
+""", unsafe_allow_html=True)
 from datetime import datetime
 import hashlib
 import json
