@@ -10,7 +10,7 @@ import streamlit as st
 # ==========================================
 st.set_page_config(
     page_title="Elite Water Purifier Inventory & Invoicing",
-    page_icon="⚡",
+    page_icon="https://raw.githubusercontent.com/abhishekpimparkar45-droid/inventory-app/main/logo.png.jpg",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
