@@ -127,12 +127,38 @@ def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 # ==========================================
-# 3. SESSION STATE INITIALIZATION
+# 3. SESSION STATE INITIALIZATION & LOGIN
 # ==========================================
+MASTER_USERNAME = "Abhishek_Pimparkar"
+MASTER_PASSWORD = "Abhi@045"
+
 if "logged_in" not in st.session_state:
-    st.session_state.logged_in = True
+    st.session_state.logged_in = False
 if "current_user" not in st.session_state:
-    st.session_state.current_user = "ActiveUser"
+    st.session_state.current_user = "Guest"
+
+if not st.session_state.logged_in:
+    st.markdown("<h2 style='text-align: center; color: #00F5FF;'>🔐 Elite Inventory Login</h2>", unsafe_allow_html=True)
+    
+    with st.form("simple_login_form"):
+        u_name = st.text_input("Username").strip()
+        u_pass = st.text_input("Password", type="password").strip()
+        submit = st.form_submit_button("Login")
+        
+        if submit:
+            if u_name == MASTER_USERNAME and u_pass == MASTER_PASSWORD:
+                st.session_state.logged_in = True
+                st.session_state.current_user = MASTER_USERNAME
+                st.success("Master Login Successful!")
+                st.rerun()
+            elif u_name != "" and u_pass != "":
+                st.session_state.logged_in = True
+                st.session_state.current_user = u_name
+                st.success(f"New User Session Started for @{u_name}!")
+                st.rerun()
+            else:
+                st.error("Please enter username and password.")
+    st.stop()
 if "user_email" not in st.session_state:
     st.session_state.user_email = "admin@eliteinventory.com"
 if "user_bio" not in st.session_state:
