@@ -127,7 +127,7 @@ def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 # ==========================================
-# 3. SESSION STATE INITIALIZATION & LOGIN
+# 3. SESSION STATE INITIALIZATION & AUTHENTICATION
 # ==========================================
 MASTER_USERNAME = "Abhishek_Pimparkar"
 MASTER_PASSWORD = "Abhi@045"
@@ -138,26 +138,60 @@ if "current_user" not in st.session_state:
     st.session_state.current_user = "Guest"
 
 if not st.session_state.logged_in:
-    st.markdown("<h2 style='text-align: center; color: #00F5FF;'>🔐 Elite Inventory Login</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00F5FF;'>🔐 Elite Inventory Portal</h2>", unsafe_allow_html=True)
     
-    with st.form("simple_login_form"):
-        u_name = st.text_input("Username").strip()
-        u_pass = st.text_input("Password", type="password").strip()
-        submit = st.form_submit_button("Login")
-        
-        if submit:
-            if u_name == MASTER_USERNAME and u_pass == MASTER_PASSWORD:
-                st.session_state.logged_in = True
-                st.session_state.current_user = MASTER_USERNAME
-                st.success("Master Login Successful!")
-                st.rerun()
-            elif u_name != "" and u_pass != "":
-                st.session_state.logged_in = True
-                st.session_state.current_user = u_name
-                st.success(f"New User Session Started for @{u_name}!")
-                st.rerun()
-            else:
-                st.error("Please enter username and password.")
+    # Create two tabs: One for Login, One for Creating a New Account
+    auth_tab1, auth_tab2 = st.tabs(["🔑 Login", "📝 Register New Account"])
+    
+    # --- TAB 1: LOGIN SECTION ---
+    with auth_tab1:
+        with st.form("login_form"):
+            l_user = st.text_input("Username").strip()
+            l_pass = st.text_input("Password", type="password").strip()
+            l_submit = st.form_submit_button("Login")
+            
+            if l_submit:
+                if l_user == MASTER_USERNAME and l_pass == MASTER_PASSWORD:
+                    st.session_state.logged_in = True
+                    st.session_state.current_user = MASTER_USERNAME
+                    st.success("Master Login Successful! Loading main inventory...")
+                    st.rerun()
+                else:
+                    # Check if the user exists in the SQLite 'users' table
+                    cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (l_user, hash_password(l_pass)))
+                    user_row = cursor.fetchone()
+                    if user_row:
+                        st.session_state.logged_in = True
+                        st.session_state.current_user = l_user
+                        st.success(f"Welcome back, @{l_user}!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid Username or Password! Please try again.")
+
+    # --- TAB 2: REGISTER NEW ACCOUNT SECTION ---
+    with auth_tab2:
+        with st.form("register_form"):
+            r_user = st.text_input("Choose New Username").strip()
+            r_pass = st.text_input("Choose New Password", type="password").strip()
+            r_email = st.text_input("Email (Optional)").strip()
+            r_submit = st.form_submit_button("Create New Account")
+            
+            if r_submit:
+                if not r_user or not r_pass:
+                    st.error("Username and Password are required!")
+                elif r_user == MASTER_USERNAME:
+                    st.error("This username cannot be used.")
+                else:
+                    try:
+                        # Save the new user into the SQLite database
+                        hashed_pw = hash_password(r_pass)
+                        cursor.execute("INSERT INTO users (username, email, password, bio, avatar_seed) VALUES (?, ?, ?, ?, ?)",
+                                       (r_user, r_email, hashed_pw, "New Registered User", "Felix"))
+                        conn.commit()
+                        st.success("Account created successfully! Please go to the 'Login' tab to sign in.")
+                    except sqlite3.IntegrityError:
+                        st.error("This username already exists. Please choose a different name.")
+
     st.stop()
 if "user_email" not in st.session_state:
     st.session_state.user_email = "admin@eliteinventory.com"
